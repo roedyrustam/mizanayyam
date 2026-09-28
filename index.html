@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mizan Ayyam - Protokol Produktivitas 7 Hari & 5 Waktu</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#020617">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .font-arabic {
+            font-family: 'Amiri', serif;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header Navigasi & Live Status -->
+    <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 px-4 sm:px-6 py-3.5 sm:py-4">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xl shadow-lg shadow-emerald-500/10 shrink-0">
+                    م
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-emerald-400 flex items-center gap-2">
+                        MIZAN AYYAM
+                        <span
+                            class="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 hidden md:inline-block">Protokol
+                            Sirkadian & Kosmis</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Harmonisasi 7 Siklus Penciptaan & Manajemen 5 Waktu Shalat</p>
+                </div>
+            </div>
+
+            <!-- Badges Bar: Lokasi, Countdown Shalat & Hari -->
+            <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
+                <div id="locationBadge"
+                    class="text-[11px] sm:text-xs px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-slate-300 flex items-center gap-1.5 shadow-sm cursor-pointer hover:border-slate-600 transition-colors"
+                    title="Klik untuk mendeteksi ulang lokasi via GPS" onclick="refreshLocation()">
+                    <span class="text-emerald-400">📍</span>
+                    <span id="locationText">Makassar (Default)</span>
+                </div>
+
+                <div id="countdownBadge"
+                    class="text-[11px] sm:text-xs px-3.5 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 font-mono text-emerald-300 flex items-center gap-2 shadow-sm shadow-emerald-500/10">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="countdownText">Sinkronisasi Waktu...</span>
+                </div>
+
+                <div id="liveBadge"
+                    class="text-[11px] sm:text-xs px-3.5 py-1.5 rounded-full bg-slate-800/90 border border-slate-700 font-medium text-slate-300 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Mendeteksi Hari...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Container Utama -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-6 sm:space-y-8">
+
+        <!-- Toolbar Kontrol: PWA, Audio Sirkadian, Notifikasi & Backup Data -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 px-4 shadow-xl text-xs">
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Tombol Pasang PWA -->
+                <button id="pwaInstallBtn" onclick="installPWA()" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all shadow-md shadow-emerald-500/20 active:scale-95">
+                    <span>📲</span>
+                    <span>Pasang Aplikasi</span>
+                </button>
+
+                <!-- Tombol Audio Sirkadian -->
+                <button id="audioToggleBtn" onclick="toggleAudioSetting()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/90 text-slate-300 hover:border-slate-600 transition-colors" title="Putar nada lonceng sirkadian saat masuk waktu shalat">
+                    <span id="audioIcon">🔇</span>
+                    <span id="audioLabel">Suara: Nonaktif</span>
+                </button>
+
+                <!-- Uji Coba Nada -->
+                <button onclick="playSoothingChime(); showToast('Memutar Nada Harmonis Sirkadian (432Hz)');" class="px-2.5 py-1.5 rounded-xl border border-slate-700/70 bg-slate-800/50 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-colors" title="Dengarkan nada harmonik Web Audio API">
+                    🎵 Tes Nada
+                </button>
+
+                <!-- Tombol Notifikasi Web -->
+                <button id="notifToggleBtn" onclick="toggleNotificationSetting()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/90 text-slate-300 hover:border-slate-600 transition-colors" title="Tampilkan notifikasi desktop/mobile saat perpindahan waktu shalat">
+                    <span id="notifIcon">🔕</span>
+                    <span id="notifLabel">Notifikasi: Nonaktif</span>
+                </button>
+            </div>
+
+            <!-- Export & Import Data -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-slate-500 hidden sm:inline font-medium">Cadangan:</span>
+                <button onclick="exportDataJSON()" class="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-emerald-500 hover:text-emerald-400 transition-colors flex items-center gap-1.5 shadow-sm" title="Ekspor seluruh jurnal dan checklist ke format JSON">
+                    <span>📥</span>
+                    <span>Backup JSON</span>
+                </button>
+                <button onclick="exportDataMarkdown()" class="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-500 hover:text-cyan-400 transition-colors flex items-center gap-1.5 shadow-sm" title="Ekspor laporan muhasabah ke format Markdown">
+                    <span>📑</span>
+                    <span>Laporan MD</span>
+                </button>
+                <label class="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-amber-500 hover:text-amber-400 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm" title="Pulihkan jurnal dan checklist dari file JSON cadangan">
+                    <span>📤</span>
+                    <span>Pulihkan</span>
+                    <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
+                </label>
+            </div>
+        </div>
+
+        <!-- Navigasi 7 Hari (Urutan HR. Muslim 2789: Sabtu s.d. Jumat) -->
+        <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+                <span class="font-semibold uppercase tracking-wider">Urutan Hari Kosmologis (HR. Muslim 2789)</span>
+                <span class="text-emerald-400 hidden sm:inline">Pilih hari untuk meninjau protokol & dalil</span>
+            </div>
+            <nav class="grid grid-cols-7 gap-2" id="dayButtons">
+                <!-- Disuntikkan via JavaScript -->
+            </nav>
+        </div>
+
+        <!-- Modul Utama: Fase, Nash Dalil & Padanan Kosmologis -->
+        <section
+            class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 md:p-8 space-y-6 shadow-2xl relative overflow-hidden">
+            <div
+                class="absolute -top-24 -right-24 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none">
+            </div>
+
+            <div
+                class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+                <div>
+                    <span id="badgeFase"
+                        class="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 inline-block mb-2">Fase
+                        Kosmis</span>
+                    <h2 id="judulHari" class="text-2xl md:text-3xl font-bold tracking-tight text-slate-100">Nama Hari
+                    </h2>
+                    <p id="subFase" class="text-slate-400 text-sm mt-1">Ciptaan & Entitas Alam</p>
+                </div>
+                <div
+                    class="md:text-right bg-slate-950/50 p-3 rounded-xl border border-slate-800 md:border-transparent md:bg-transparent">
+                    <span class="text-[11px] text-slate-500 uppercase tracking-widest font-semibold block">Prinsip
+                        Produktivitas</span>
+                    <span id="mindsetFokus" class="text-base font-semibold text-emerald-300">Mindset Utama</span>
+                </div>
+            </div>
+
+            <!-- Teks Nash & Terjemah -->
+            <div class="bg-slate-950/80 border border-slate-800/90 rounded-xl p-5 space-y-3">
+                <div
+                    class="flex items-center justify-between text-xs text-slate-400 font-semibold tracking-wider uppercase">
+                    <span>Nash Otentik Fase Penciptaan</span>
+                    <span id="sumberDalil" class="text-emerald-400 font-mono">HR. Muslim</span>
+                </div>
+                <div id="teksArab" class="text-xl md:text-2xl text-right font-arabic leading-relaxed text-slate-200"
+                    dir="rtl"></div>
+                <p id="artiDalil" class="text-xs md:text-sm text-slate-300 italic leading-relaxed"></p>
+                <div
+                    class="pt-3 border-t border-slate-800/70 flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 text-xs text-slate-400">
+                    <span class="text-cyan-400 font-semibold uppercase tracking-wider shrink-0">Paralel Kosmologis &
+                        Sains:</span>
+                    <span id="filosofiKosmis" class="text-slate-300"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modul Protokol 5 Waktu Sirkadian -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Protokol 5 Waktu Harian
+                    </h3>
+                    <p class="text-xs text-slate-400">Pembagian tugas terfokus yang diselaraskan dengan fluktuasi hormon
+                        & metabolisme tubuh</p>
+                </div>
+                <div id="progressCounter"
+                    class="text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-emerald-400">
+                    0 / 5 Terpenuhi
+                </div>
+            </div>
+
+            <!-- 5 Kolom Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4" id="waktuCardsContainer">
+                <!-- Disuntikkan via JavaScript -->
+            </div>
+        </section>
+
+        <!-- Muhasabah & Catatan Harian (LocalStorage Persistence) -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Muhasabah & Catatan Refleksi Hari Ini
+                </h3>
+                <span id="journalStatus" class="text-[11px] text-slate-500 font-mono">Tersimpan otomatis</span>
+            </div>
+            <textarea id="journalInput" rows="3"
+                placeholder="Tuliskan evaluasi harian: sejauh mana tugas terlaksana, keselarasan niat, atau kendala teknis yang dihadapi..."
+                class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 text-xs md:text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"></textarea>
+        </section>
+
+        <!-- Dalil Landasan Waktu -->
+        <section class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 text-xs text-slate-400 space-y-2">
+            <div class="flex items-center gap-2 font-semibold text-slate-300 uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                Dalil Pengaturan Waktu & Sunnatullah Alam
+            </div>
+            <p class="italic text-slate-300 leading-relaxed">
+                "Laksanakanlah shalat sejak matahari tergelincir sampai gelapnya malam dan (laksanakan pula shalat)
+                Subuh. Sungguh, shalat Subuh itu disaksikan (oleh malaikat)." (QS. Al-Isra': 78) &bull; "Maka
+                bertasbihlah kepada Allah pada petang hari dan pada pagi hari (waktu Subuh), dan bagi-Nyalah segala puji
+                di langit dan di bumi dan pada malam hari dan pada waktu kamu berada pada waktu Zuhur." (QS. Ar-Rum:
+                17-18)
+            </p>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500">
+        Mizan Ayyam &copy; 2026 &bull; Mengikuti Sunnatullah Kosmis & Syariat Islam
+    </footer>
+
+    <script>
+        // Data Master 7 Fase Penciptaan (Sabtu s.d. Jumat sesuai Hadis Muslim No. 2789)
+        const dataAyyam = [
+            {
+                id: 6, // 6 = Sabtu (JS Date.getDay())
+                nama: "Sabtu",
+                arab: "السبت (As-Sabt)",
+                fase: "Akresi Litosfer & Materi Dasar",
+                ciptaan: "At-Turbah (Tanah & mineral kerak bumi)",
+                fokus: "Maintenance Infrastruktur, Sanitasi Sistem & Reset",
+                sumber: "HR. Muslim No. 2789 & QS. Al-Baqarah: 29",
+                arabText: "خَلَقَ اللَّهُ عَزَّ وَجَلَّ التُّرْبَةَ يَوْمَ السَّبْتِ ... هُوَ الَّذِي خَلَقَ لَكُم مَّا فِي الْأَرْضِ جَمِيعًا",
+                arti: "\"Allah 'Azza wa Jalla menciptakan tanah pada hari Sabtu... Dialah yang menciptakan segala apa yang ada di bumi untukmu semuanya.\"",
+                kosmis: "Akresi gravitasi partikel kosmis memadat membentuk batuan dasar litosfer bumi purba sebelum struktur lain dibangun.",
+                waktu: {
+                    subuh: {
+                        nama: "Fajr (Subuh)",
+                        jam: "04:30 - 06:30",
+                        tema: "Penyegaran Raga Murni",
+                        tugas: "Olahraga peregangan ringan, jalan pagi menghirup udara segar, pemulihan stamina raga."
+                    },
+                    dzuhur: {
+                        nama: "Duha - Dzuhur",
+                        jam: "07:00 - 13:00",
+                        tema: "Housekeeping & Sanitasi Sistem",
+                        tugas: "Bersihkan ruang kerja fisik, hapus cache/file sampah, update dependensi kode/software."
+                    },
+                    ashar: {
+                        nama: "Ashar",
+                        jam: "15:30 - 17:30",
+                        tema: "Eksplorasi Santai Bebas Target",
+                        tugas: "Lakukan hobi restoratif (fotografi, membaca literatur lepas, riset bebas) tanpa tekanan KPI."
+                    },
+                    maghrib: {
+                        nama: "Maghrib",
+                        jam: "18:00 - 19:15",
+                        tema: "Ketenangan & Jamuan Keluarga",
+                        tugas: "Makan malam santai, shalat berjamaah, dan hadir seutuhnya tanpa membuka laptop."
+                    },
+                    isya: {
+                        nama: "Isya - Lail",
+                        jam: "19:30 - 21:30",
+                        tema: "Reset Total Sistem Hayati",
+                        tugas: "Tidur restoratif 8 jam untuk regenerasi sel otak menyambut fase penetapan target Ahad."
+                    }
+                }
+            },
+            {
+                id: 0, // 0 = Ahad
+                nama: "Ahad",
+                arab: "الأحد (Al-Ahad)",
+                fase: "Orogenesis & Pasak Penyeimbang",
+                ciptaan: "Al-Jibal (Gunung-gunung pasak penstabil)",
+                fokus: "Stabilisasi, Anchor Goals & Proteksi Fokus",
+                sumber: "HR. Muslim No. 2789 & QS. An-Nahl: 15",
+                arabText: "وَخَلَقَ فِيهَا الْجِبَالَ يَوْمَ الأَحَدِ ... وَأَلْقَىٰ فِي الْأَرْضِ رَوَاسِيَ أَن تَمِيدَ بِكُمْ",
+                arti: "\"Dan Allah menciptakan gunung-gunung pada hari Ahad... Dan Dia menancapkan gunung-gunung di bumi agar bumi itu tidak berguncang bersama kamu.\"",
+                kosmis: "Diferensiasi isostasi & akar pegunungan dalam yang menstabilkan lempeng tektonik dari guncangan terus-menerus.",
+                waktu: {
+                    subuh: {
+                        nama: "Fajr (Subuh)",
+                        jam: "04:30 - 06:30",
+                        tema: "Pancangan Visi & 3 Batu Besar",
+                        tugas: "Tuliskan 3 'Anchor Goals' (Batu Besar) prioritas mutlak yang wajib tuntas sepekan ini."
+                    },
+                    dzuhur: {
+                        nama: "Duha - Dzuhur",
+                        jam: "07:00 - 13:00",
+                        tema: "Konstruksi Pondasi Arsitektur",
+                        tugas: "Eksekusi blok fokus pertama untuk memetakan alur logika, dependensi modul, dan jadwal."
+                    },
+                    ashar: {
+                        nama: "Ashar",
+                        jam: "15:30 - 17:30",
+                        tema: "Proteksi Kalender & Filter Distraksi",
+                        tugas: "Time-blocking kalender: tolak atau geser meeting yang berpotensi mengacaukan 3 target inti."
+                    },
+                    maghrib: {
+                        nama: "Maghrib",
+                        jam: "18:00 - 19:15",
+                        tema: "Detoksifikasi Digital Penuh",
+                        tugas: "Jeda layar gawai, tadabbur Al-Qur'an, dan redakan stres mental."
+                    },
+                    isya: {
+                        nama: "Isya - Lail",
+                        jam: "19:30 - 21:30",
+                        tema: "Penyiapan Start Awal Pekan",
+                        tugas: "Siapkan to-do list siap eksekusi agar tidak bingung saat memulai kerja di Senin pagi."
+                    }
+                }
+            },
+            {
+                id: 1, // 1 = Senin
+                nama: "Senin",
+                arab: "الإثنين (Al-Itsnain)",
+                fase: "Biosfer, Fotosintesis & Nutrisi Awal",
+                ciptaan: "As-Syajar & Aqwataha (Tumbuhan & cadangan makanan)",
+                fokus: "Input Riset, Pasokan Bahan & Deep Work Pagi",
+                sumber: "HR. Muslim No. 2789 & QS. Fussilat: 10",
+                arabText: "وَخَلَقَ الشَّجَرَ يَوْمَ الاِثْنَيْنِ ... وَقَدَّرَ فِيهَا أَقْوَاتَهَا فِي أَرْبَعَةِ أَيَّامٍ",
+                arti: "\"Dan Allah menciptakan pepohonan pada hari Senin... Dan Dia menentukan padanya kadar rezeki makanannya.\"",
+                kosmis: "Great Oxidation Event & fotosintesis purba yang mengubah materi mentah menjadi biomassa kaya energi.",
+                waktu: {
+                    subuh: {
+                        nama: "Fajr (Subuh)",
+                        jam: "04:30 - 06:30",
+                        tema: "Asupan Bahan Baku & Niat Segar",
+                        tugas: "Dzikir pagi dan telaah referensi teknis / skema data kunci sebelum membuka kotak masuk."
+                    },
+                    dzuhur: {
+                        nama: "Duha - Dzuhur",
+                        jam: "07:00 - 13:00",
+                        tema: "Fotosintesis Kognitif (High Output)",
+                        tugas: "Gunakan energi maksimal pagi hari untuk drafting logika utama, coding fitur baru, atau penulisan."
+                    },
+                    ashar: {
+                        nama: "Ashar",
+                        jam: "15:30 - 17:30",
+                        tema: "Kompilasi & Pengorganisasian",
+                        tugas: "Kompilasi hasil kerja pagi, periksa log peringatan, dan rapikan catatan staging."
+                    },
+                    maghrib: {
+                        nama: "Maghrib",
+                        jam: "18:00 - 19:15",
+                        tema: "Nutrisi Fisik & Istirahat Sadar",
+                        tugas: "Makan malam bergizi seimbang, jangan biarkan masalah pekerjaan menginterupsi waktu keluarga."
+                    },
+                    isya: {
+                        nama: "Isya - Lail",
+                        jam: "19:30 - 21:30",
+                        tema: "Konsolidasi Memori Otak",
+                        tugas: "Review checklist harian, jauhkan cahaya biru gadget 45 menit sebelum tidur malam."
+                    }
+                }
+            },
+            {
+                id: 2, // 2 = Selasa
+                nama: "Selasa",
+                arab: "الثلاثاء (Ats-Tsulatsa)",
+                fase: "Al-Makruh, Penempaan Besi & Ujian Ekstrem",
+                ciptaan: "Al-Makruh & Al-Hadid (Hal tak disukai, hambatan & kekuatan besi)",
+                fokus: "Hadapi Masalah Terberat (Eat That Frog)",
+                sumber: "HR. Muslim No. 2789 & QS. Al-Hadid: 25",
+                arabText: "وَخَلَقَ الْمَكْرُوهَ يَوْمَ الثُّلاَثَاءِ ... وَأَنزَلْنَا الْحَدِيدَ فِيهِ بَأْسٌ شَدِيدٌ وَمَنَافِعُ لِلنَّاسِ",
+                arti: "\"Dan Allah menciptakan hal yang tidak disukai pada hari Selasa... Dan Kami turunkan besi yang padanya terdapat kekuatan hebat.\"",
+                kosmis: "Kondisi turbulensi vulkanik purba dan pengendapan logam berat yang memicu daya tahan adaptif ekosistem.",
+                waktu: {
+                    subuh: {
+                        nama: "Fajr (Subuh)",
+                        jam: "04:30 - 06:30",
+                        tema: "Mental Armor (Perisai Batin)",
+                        tugas: "Identifikasi 1 hambatan utama yang paling dihindari (debugging kritis, komplain klien, penagihan)."
+                    },
+                    dzuhur: {
+                        nama: "Duha - Dzuhur",
+                        jam: "07:00 - 13:00",
+                        tema: "Penempaan Baja (Hard Problem Solving)",
+                        tugas: "Hadapi langsung problem terberat tersebut pada jam fokus pertama. Tahan godaan tugas mudah."
+                    },
+                    ashar: {
+                        nama: "Ashar",
+                        jam: "15:30 - 17:30",
+                        tema: "Pendinginan Logam (Cooling Down)",
+                        tugas: "Beralih ke pekerjaan bertensi rendah: membalas korespondensi rutin atau merapikan inbox."
+                    },
+                    maghrib: {
+                        nama: "Maghrib",
+                        jam: "18:00 - 19:15",
+                        tema: "Pelepasan Ketegangan",
+                        tugas: "Wudhu dengan saksama, shalat dengan tuma'ninah untuk meredakan ketegangan sistem saraf."
+                    },
+                    isya: {
+                        nama: "Isya - Lail",
+                        jam: "19:30 - 21:30",
+                        tema: "Refleksi Ketahanan Diri",
+                        tugas: "Catat di jurnal: bagaimana solusi atas problem sulit hari ini membentuk kapasitas mental Anda."
+                    }
+                }
+            },
+            {
+                id: 3, // 3 = Rabu
+                nama: "Rabu",
+                arab: "الأربعاء (Al-Arbi'a)",
+                fase: "An-Nur, Ozon & Penyingkapan Tabir Langit",
+                ciptaan: "An-Nur (Cahaya penerang & penyingkapan arah)",
+                fokus: "Mid-Week Review, Testing, QA & Klarifikasi",
+                sumber: "HR. Muslim No. 2789 & QS. An-Nazi'at: 29",
+                arabText: "وَخَلَقَ النُّورَ يَوْمَ الأَرْبِعَاءِ ... وَأَغْطَشَ لَيْلَهَا وَأَخْرَجَ ضُحَاهَا",
+                arti: "\"Dan Allah menciptakan cahaya pada hari Rabu... Dan Dia menjadikan malamnya gelap gulita, dan siangnya terang benderang.\"",
+                kosmis: "Pembersihan kabut atmosfer purba dan terbentuknya ozon sehingga foton surya menyinari permukaan secara jernih.",
+                waktu: {
+                    subuh: {
+                        nama: "Fajr (Subuh)",
+                        jam: "04:30 - 06:30",
+                        tema: "Pencerahan Mid-Week",
+                        tugas: "Audit separuh pekan: bandingkan capaian saat ini dengan target Ahad. Di mana letak deviasinya?"
+                    },
+                    dzuhur: {
+                        nama: "Duha - Dzuhur",
+                        jam: "07:00 - 13:00",
+                        tema: "Penyinaran & Uji Kualitas (QA)",
+                        tugas: "Lakukan audit kualitas, code review, validasi data, dan eliminasi fitur/asumsi yang rancu."
+                    },
+                    ashar: {
+                        nama: "Ashar",
+                        jam: "15:30 - 17:30",
+                        tema: "Klarifikasi Tanpa Ambiguitas",
+                        tugas: "Sinkronisasi detail teknis dengan mitra kerja / klien agar ekspektasi hasil akhir menjadi transparan."
+                    },
+                    maghrib: {
+                        nama: "Maghrib",
+                        jam: "18:00 - 19:15",
+                        tema: "Pencerahan Batin & Syukur",
+                        tugas: "Shalat Maghrib dan resapi QS. An-Nur: 35 (Cahaya di atas cahaya)."
+                    },
+                    isya: {
+                        nama: "Isya - Lail",
+                        jam: "19:30 - 21:30",
+                        tema: "Checklist Kesiapan Delivery",
+                        tugas: "Kunci item yang akan di-ship besok Kamis. Pastikan tidak ada berkas rilis yang tertinggal."
+                    }
+                }
+            },
+            {
+                id: 4, // 4 = Kamis
+                nama: "Kamis",
+                arab: "الخميس (Al-Khamis)",
+                fase: "Ledakan Kambrium, Fauna & Mobilitas",
+                ciptaan: "Ad-Dawab (Fauna melata yang bergerak dinamis)",
+                fokus: "Shipping, Delivery, Distribusi & Kolaborasi Cepat",
+                sumber: "HR. Muslim No. 2789 & QS. An-Nur: 45",
+                arabText: "وَبَثَّ فِيهَا مِنَ الدَّوَابِّ يَوْمَ الْخَمِيسِ ... وَاللَّهُ خَلَقَ كُلَّ دَابَّةٍ مِّن مَّاءٍ",
+                arti: "\"Dan Dia menyebarkan di bumi hewan melata pada hari Kamis... Dan Allah menciptakan semua hewan dari air.\"",
+                kosmis: "Ledakan Kambrium: diversifikasi masif organisme multiseluler yang bergerak aktif menempati habitat biosfer.",
+                waktu: {
+                    subuh: {
+                        nama: "Fajr (Subuh)",
+                        jam: "04:30 - 06:30",
+                        tema: "Penyalaan Mesin Mobilitas",
+                        tugas: "Niatkan hari untuk menuntaskan hal menggantung. Buka daftar deliverable yang siap dikirimkan."
+                    },
+                    dzuhur: {
+                        nama: "Duha - Dzuhur",
+                        jam: "07:00 - 13:00",
+                        tema: "Shipping Run (Distribusi Aktif)",
+                        tugas: "Deploy build ke server, rilis produk digital, kirim hasil kerja ke klien, tutup antrean backlog."
+                    },
+                    ashar: {
+                        nama: "Ashar",
+                        jam: "15:30 - 17:30",
+                        tema: "Penyisiran Akhir (Zero Backlog)",
+                        tugas: "Kirim follow-up pesan penutup. Pastikan tidak ada tanggungan mendesak yang terbawa ke hari Jumat."
+                    },
+                    maghrib: {
+                        nama: "Maghrib",
+                        jam: "18:00 - 19:15",
+                        tema: "Penyambutan Sayyidul Ayyam",
+                        tugas: "Bersuci menyambut malam Jumat, membaca Surah Al-Kahfi, dan perbanyak shalawat atas Nabi."
+                    },
+                    isya: {
+                        nama: "Isya - Lail",
+                        jam: "19:30 - 21:30",
+                        tema: "Penutupan Mesin Teknis",
+                        tugas: "Kunci laptop kerja. Redakan ritme teknis untuk menyongsong keberkahan hari Jumat."
+                    }
+                }
+            },
+            {
+                id: 5, // 5 = Jumat
+                nama: "Jumat",
+                arab: "الجمعة (Al-Jumu'ah)",
+                fase: "Puncak Penciptaan & Integritas Insani",
+                ciptaan: "Adam a.s. (Khalifah berakal budi & bermoral)",
+                fokus: "Spiritualitas Puncak, Kebajikan Sosial & Muhasabah",
+                sumber: "HR. Muslim No. 2789 & QS. Al-Jumu'ah: 9-10",
+                arabText: "وَخَلَقَ آدَمَ عَلَيْهِ السَّلاَمُ بَعْدَ الْعَصْرِ مِنْ يَوْمِ الْجُمُعَةِ ... فَابْتَغُوا مِن فَضْلِ اللَّهِ",
+                arti: "\"Dan Allah menciptakan Adam ba'da Ashar pada hari Jumat di akhir penciptaan... Maka carilah karunia Allah dan ingatlah Allah banyak-banyak.\"",
+                kosmis: "Kemunculan manusia berkesadaran spiritual, bahasa simbolik, dan mandat khalifah pemakmur bumi.",
+                waktu: {
+                    subuh: {
+                        nama: "Fajr (Subuh)",
+                        jam: "04:30 - 06:30",
+                        tema: "Penyucian & Sedekah Pagi",
+                        tugas: "Shalat Subuh berjamaah, bersedekah subuh, dan siapkan fisik serta hati menyambut Shalat Jumat."
+                    },
+                    dzuhur: {
+                        nama: "Duha - Dzuhur",
+                        jam: "07:00 - 13:00",
+                        tema: "Ibadah Puncak Hari Jumat",
+                        tugas: "Tuntaskan tugas kantor ringan sebelum jam 11:00, kenakan pakaian bersih terbaik menuju Masjid."
+                    },
+                    ashar: {
+                        nama: "Ashar",
+                        jam: "15:30 - 17:30",
+                        tema: "Sa'atul Ijabah (Waktu Mustajab)",
+                        tugas: "Alokasikan waktu khusus ba'da Ashar untuk menyendiri, berdzikir, dan memanjatkan doa hajat penting."
+                    },
+                    maghrib: {
+                        nama: "Maghrib",
+                        jam: "18:00 - 19:15",
+                        tema: "Silaturahmi & Kasih Sayang",
+                        tugas: "Hubungi orang tua atau sahabat karib, pererat hubungan insani tanpa urusan transaksi profesional."
+                    },
+                    isya: {
+                        nama: "Isya - Lail",
+                        jam: "19:30 - 21:30",
+                        tema: "Audit Makna Khalifah",
+                        tugas: "Audit kebermanfaatan kerja sepekan: apakah karya Anda bernilai ibadah dan maslahat bagi sesama?"
+                    }
+                }
+            }
+        ];
+
+        // Status Hari Real-time
+        const todayActual = new Date().getDay();
+        let currentDayId = todayActual;
+
+        // Node Referensi DOM
+        const dayButtonsContainer = document.getElementById('dayButtons');
+        const waktuCardsContainer = document.getElementById('waktuCardsContainer');
+        const liveBadge = document.getElementById('liveBadge');
+        const locationText = document.getElementById('locationText');
+        const countdownText = document.getElementById('countdownText');
+        const progressCounter = document.getElementById('progressCounter');
+        const journalInput = document.getElementById('journalInput');
+        const journalStatus = document.getElementById('journalStatus');
+
+        // Koordinat Default (Kota Makassar, Sulsel) & State Waktu
+        const DEFAULT_COORDS = { lat: -5.1477, lng: 119.4327, name: 'Makassar (Default)' };
+        let activeCoords = { ...DEFAULT_COORDS };
+        let prayerTimings = null;
+        const PRAYER_CACHE_KEY = 'mizan_ayyam_prayer_cache_v2';
+
+        // Utilitas LocalStorage Checklist & Jurnal
+        function getCheckKey(dayId, slotKey) {
+            return `mizan_ayyam_check_${dayId}_${slotKey}`;
+        }
+        function getJournalKey(dayId) {
+            return `mizan_ayyam_journal_${dayId}`;
+        }
+
+        // Utilitas Konversi Waktu (HH:MM -> Menit dari Tengah Malam)
+        function timeToMinutes(str) {
+            if (!str) return 0;
+            const clean = str.split(' ')[0];
+            const [h, m] = clean.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        // Caching 24 Jam dengan LocalStorage
+        function getCachedPrayerTimes() {
+            try {
+                const raw = localStorage.getItem(PRAYER_CACHE_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                const now = Date.now();
+                const todayStr = new Date().toDateString();
+                // Valid jika belum 24 jam dan berada pada hari kalender yang sama
+                if (now - parsed.timestamp < 24 * 60 * 60 * 1000 && parsed.dateStr === todayStr) {
+                    return parsed;
+                }
+            } catch (err) {
+                console.warn('Gagal membaca cache jadwal:', err);
+            }
+            return null;
+        }
+
+        function savePrayerTimesToCache(timings, coords, locationName) {
+            try {
+                const payload = {
+                    timestamp: Date.now(),
+                    dateStr: new Date().toDateString(),
+                    timings,
+                    coords,
+                    locationName
+                };
+                localStorage.setItem(PRAYER_CACHE_KEY, JSON.stringify(payload));
+            } catch (err) {
+                console.warn('Gagal menyimpan cache jadwal:', err);
+            }
+        }
+
+        function updateLocationBadge(text) {
+            if (locationText) {
+                locationText.innerText = text;
+            }
+        }
+
+        // Fetch Jadwal Shalat dari AlAdhan API (Method 20 = Kemenag RI, Subuh 20°, Isya 18°)
+        async function fetchPrayerTimes(lat, lng, locName) {
+            const url = `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=20`;
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (data && data.data && data.data.timings) {
+                    prayerTimings = data.data.timings;
+                    activeCoords = { lat, lng, name: locName };
+                    savePrayerTimesToCache(prayerTimings, activeCoords, locName);
+                    updateLocationBadge(locName);
+                    renderView();
+                    updateCountdown();
+                    return true;
+                }
+            } catch (err) {
+                console.warn('Fetch AlAdhan API bermasalah. Menggunakan fallback cache/default:', err);
+                const cached = localStorage.getItem(PRAYER_CACHE_KEY);
+                if (cached) {
+                    try {
+                        const parsed = JSON.parse(cached);
+                        prayerTimings = parsed.timings;
+                        activeCoords = parsed.coords || DEFAULT_COORDS;
+                        updateLocationBadge(parsed.locationName || DEFAULT_COORDS.name);
+                        renderView();
+                        updateCountdown();
+                        return true;
+                    } catch (e) {}
+                }
+                // Fallback darurat jika offline murni dan cache kosong
+                prayerTimings = {
+                    Fajr: '04:42',
+                    Sunrise: '05:58',
+                    Dhuhr: '12:02',
+                    Asr: '15:15',
+                    Maghrib: '18:05',
+                    Isha: '19:14'
+                };
+                updateLocationBadge(DEFAULT_COORDS.name);
+                renderView();
+                updateCountdown();
+            }
+            return false;
+        }
+
+        // Deteksi Lokasi Otomatis via Geolocation API
+        function initLocationAndSchedule(forceRefresh = false) {
+            const cached = getCachedPrayerTimes();
+            if (!forceRefresh && cached) {
+                prayerTimings = cached.timings;
+                activeCoords = cached.coords || DEFAULT_COORDS;
+                updateLocationBadge(cached.locationName || DEFAULT_COORDS.name);
+                renderView();
+                updateCountdown();
+                return;
+            }
+
+            updateLocationBadge('Mendeteksi GPS...');
+
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const locName = `GPS (${lat.toFixed(2)}°, ${lng.toFixed(2)}°)`;
+                        await fetchPrayerTimes(lat, lng, locName);
+                    },
+                    async (err) => {
+                        console.log('GPS browser ditolak/timeout. Beralih ke default Makassar:', err.message);
+                        await fetchPrayerTimes(DEFAULT_COORDS.lat, DEFAULT_COORDS.lng, DEFAULT_COORDS.name);
+                    },
+                    { timeout: 7000, maximumAge: 60000 }
+                );
+            } else {
+                fetchPrayerTimes(DEFAULT_COORDS.lat, DEFAULT_COORDS.lng, DEFAULT_COORDS.name);
+            }
+        }
+
+        // Tombol manual untuk refresh GPS
+        window.refreshLocation = function () {
+            initLocationAndSchedule(true);
+        };
+
+        // Format Jam 5 Waktu berdasarkan Data AlAdhan
+        function getComputedSlotTimes(timings) {
+            if (!timings) {
+                return {
+                    subuh: '04:42 - 05:58',
+                    dzuhur: '05:58 - 15:15',
+                    ashar: '15:15 - 18:05',
+                    maghrib: '18:05 - 19:14',
+                    isya: '19:14 - 04:42'
+                };
+            }
+            return {
+                subuh: `${timings.Fajr} - ${timings.Sunrise}`,
+                dzuhur: `${timings.Sunrise} - ${timings.Asr}`,
+                ashar: `${timings.Asr} - ${timings.Maghrib}`,
+                maghrib: `${timings.Maghrib} - ${timings.Isha}`,
+                isya: `${timings.Isha} - ${timings.Fajr}`
+            };
+        }
+
+        // Deteksi Slot Waktu yang Sedang Aktif Sekarang
+        function getCurrentActiveSlot(timings) {
+            if (!timings) return null;
+            const now = new Date();
+            const nowM = now.getHours() * 60 + now.getMinutes();
+
+            const mFajr = timeToMinutes(timings.Fajr);
+            const mSunrise = timeToMinutes(timings.Sunrise);
+            const mAsr = timeToMinutes(timings.Asr);
+            const mMaghrib = timeToMinutes(timings.Maghrib);
+            const mIsha = timeToMinutes(timings.Isha);
+
+            if (nowM >= mFajr && nowM < mSunrise) return 'subuh';
+            if (nowM >= mSunrise && nowM < mAsr) return 'dzuhur';
+            if (nowM >= mAsr && nowM < mMaghrib) return 'ashar';
+            if (nowM >= mMaghrib && nowM < mIsha) return 'maghrib';
+            // Isya sampai Subuh esok hari (melewati jam 00:00)
+            return 'isya';
+        }
+
+        // Countdown Timer Real-time ke Waktu Shalat Berikutnya
+        function updateCountdown() {
+            if (!prayerTimings || !countdownText) return;
+
+            const now = new Date();
+            const nowM = now.getHours() * 60 + now.getMinutes();
+
+            const prayerList = [
+                { name: 'Subuh', time: prayerTimings.Fajr },
+                { name: 'Syuruq', time: prayerTimings.Sunrise },
+                { name: 'Dzuhur', time: prayerTimings.Dhuhr },
+                { name: 'Ashar', time: prayerTimings.Asr },
+                { name: 'Maghrib', time: prayerTimings.Maghrib },
+                { name: 'Isya', time: prayerTimings.Isha }
+            ];
+
+            let nextEvent = null;
+            let targetDate = new Date(now);
+
+            for (const item of prayerList) {
+                const mins = timeToMinutes(item.time);
+                if (mins > nowM) {
+                    const [h, m] = item.time.split(' ')[0].split(':').map(Number);
+                    targetDate.setHours(h, m, 0, 0);
+                    nextEvent = item;
+                    break;
+                }
+            }
+
+            if (!nextEvent) {
+                const [h, m] = prayerList[0].time.split(' ')[0].split(':').map(Number);
+                targetDate.setDate(targetDate.getDate() + 1);
+                targetDate.setHours(h, m, 0, 0);
+                nextEvent = { name: 'Subuh Esok', time: prayerTimings.Fajr };
+            }
+
+            const diffMs = targetDate.getTime() - now.getTime();
+            if (diffMs > 0) {
+                const hours = Math.floor(diffMs / 3600000);
+                const mins = Math.floor((diffMs % 3600000) / 60000);
+                const secs = Math.floor((diffMs % 60000) / 1000);
+
+                const pad = (n) => String(n).padStart(2, '0');
+                countdownText.innerHTML = `
+                    <span class="text-slate-400 font-sans hidden sm:inline">Menuju</span>
+                    <span class="font-semibold text-emerald-300">${nextEvent.name}</span>
+                    <span class="text-emerald-400">-${pad(hours)}:${pad(mins)}:${pad(secs)}</span>
+                `;
+
+                // Evaluasi transisi slot waktu untuk notifikasi & audio chime
+                const currentSlot = getCurrentActiveSlot(prayerTimings);
+                checkSlotTransition(currentSlot);
+            }
+        }
+
+        // =========================================================================
+        // MODUL 1: TOAST NOTIFIKASI UI
+        // =========================================================================
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl border text-xs sm:text-sm font-medium shadow-2xl flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ${
+                isError 
+                    ? 'bg-rose-950/90 border-rose-500/50 text-rose-200' 
+                    : 'bg-slate-900/95 border-emerald-500/50 text-emerald-300'
+            }`;
+            toast.innerHTML = `<span>${isError ? '⚠️' : '✨'}</span><span>${message}</span>`;
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // =========================================================================
+        // MODUL 2: SERVICE WORKER & PWA INSTALL HANDLER
+        // =========================================================================
+        let deferredPrompt = null;
+        const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then((reg) => {
+                    console.log('Mizan Ayyam PWA Service Worker terdaftar:', reg.scope);
+                }).catch((err) => {
+                    console.warn('Registrasi Service Worker gagal:', err);
+                });
+            });
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (pwaInstallBtn) {
+                pwaInstallBtn.classList.remove('hidden');
+                pwaInstallBtn.classList.add('flex');
+            }
+        });
+
+        window.installPWA = async function () {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                showToast('Aplikasi Mizan Ayyam berhasil dipasang!');
+            }
+            deferredPrompt = null;
+            if (pwaInstallBtn) {
+                pwaInstallBtn.classList.add('hidden');
+                pwaInstallBtn.classList.remove('flex');
+            }
+        };
+
+        window.addEventListener('appinstalled', () => {
+            showToast('Mizan Ayyam kini terpasang di perangkat Anda!');
+            if (pwaInstallBtn) {
+                pwaInstallBtn.classList.add('hidden');
+                pwaInstallBtn.classList.remove('flex');
+            }
+        });
+
+        // =========================================================================
+        // MODUL 3: AUDIO SIRKADIAN (WEB AUDIO API 432Hz HARMONIC SYNTHESIZER)
+        // =========================================================================
+        let audioCtx = null;
+        const AUDIO_KEY = 'mizan_sound_enabled';
+
+        function playSoothingChime() {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                if (!audioCtx) {
+                    audioCtx = new AudioContextClass();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const now = audioCtx.currentTime;
+                // Frekuensi harmonis kosmis alami (432Hz fundamental + overtones)
+                const harmonics = [432, 864, 1296];
+                const masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(0.2, now);
+                masterGain.connect(audioCtx.destination);
+
+                harmonics.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = idx === 0 ? 'sine' : 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    // Envelope ADSR (Attack lembut, Decay resonan panjang)
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(0.3 / (idx + 1), now + 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2 - (idx * 0.4));
+
+                    osc.connect(gain);
+                    gain.connect(masterGain);
+
+                    osc.start(now);
+                    osc.stop(now + 3.5);
+                });
+            } catch (e) {
+                console.warn('Pemutaran nada Web Audio API gagal:', e);
+            }
+        }
+
+        function getAudioSetting() {
+            return localStorage.getItem(AUDIO_KEY) === 'true';
+        }
+
+        function updateAudioUI() {
+            const isEnabled = getAudioSetting();
+            const icon = document.getElementById('audioIcon');
+            const label = document.getElementById('audioLabel');
+            const btn = document.getElementById('audioToggleBtn');
+            if (icon) icon.innerText = isEnabled ? '🔊' : '🔇';
+            if (label) label.innerText = isEnabled ? 'Suara: Aktif' : 'Suara: Nonaktif';
+            if (btn) {
+                btn.className = isEnabled 
+                    ? "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/50 bg-emerald-950/40 text-emerald-300 hover:border-emerald-400 transition-colors"
+                    : "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/90 text-slate-300 hover:border-slate-600 transition-colors";
+            }
+        }
+
+        window.toggleAudioSetting = function () {
+            const next = !getAudioSetting();
+            localStorage.setItem(AUDIO_KEY, next);
+            updateAudioUI();
+            if (next) {
+                playSoothingChime();
+                showToast('Nada Sirkadian (432Hz) Berhasil Diaktifkan!');
+            } else {
+                showToast('Suara Pengingat Dinonaktifkan');
+            }
+        };
+
+        // =========================================================================
+        // MODUL 4: WEB NOTIFICATIONS & DETEKSI PERPINDAHAN WAKTU SHALAT
+        // =========================================================================
+        const NOTIF_KEY = 'mizan_notif_enabled';
+        let lastRecordedSlot = null;
+
+        function getNotifSetting() {
+            return localStorage.getItem(NOTIF_KEY) === 'true';
+        }
+
+        function updateNotifUI() {
+            const isEnabled = getNotifSetting();
+            const icon = document.getElementById('notifIcon');
+            const label = document.getElementById('notifLabel');
+            const btn = document.getElementById('notifToggleBtn');
+            if (icon) icon.innerText = isEnabled ? '🔔' : '🔕';
+            if (label) label.innerText = isEnabled ? 'Notifikasi: Aktif' : 'Notifikasi: Nonaktif';
+            if (btn) {
+                btn.className = isEnabled 
+                    ? "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/50 bg-emerald-950/40 text-emerald-300 hover:border-emerald-400 transition-colors"
+                    : "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/90 text-slate-300 hover:border-slate-600 transition-colors";
+            }
+        }
+
+        window.toggleNotificationSetting = async function () {
+            if (!('Notification' in window)) {
+                showToast('Browser ini tidak mendukung Web Notifications', true);
+                return;
+            }
+
+            if (Notification.permission === 'default') {
+                const perm = await Notification.requestPermission();
+                if (perm !== 'granted') {
+                    showToast('Izin notifikasi tidak diberikan oleh browser', true);
+                    return;
+                }
+            } else if (Notification.permission === 'denied') {
+                showToast('Izin notifikasi diblokir di pengaturan browser Anda', true);
+                return;
+            }
+
+            const next = !getNotifSetting();
+            localStorage.setItem(NOTIF_KEY, next);
+            updateNotifUI();
+
+            if (next) {
+                showToast('Notifikasi Masuk Waktu Shalat Diaktifkan!');
+                try {
+                    new Notification('Mizan Ayyam Aktif', {
+                        body: 'Pengingat waktu shalat & protokol sirkadian berhasil diaktifkan.',
+                        icon: './icon-192.png'
+                    });
+                } catch (e) {}
+            } else {
+                showToast('Notifikasi Dinonaktifkan');
+            }
+        };
+
+        function checkSlotTransition(currentSlot) {
+            if (!currentSlot) return;
+            if (lastRecordedSlot === null) {
+                lastRecordedSlot = currentSlot;
+                return;
+            }
+
+            if (currentSlot !== lastRecordedSlot) {
+                lastRecordedSlot = currentSlot;
+
+                const todayData = dataAyyam.find(d => d.id === todayActual);
+                const slotData = todayData && todayData.waktu ? todayData.waktu[currentSlot] : null;
+                const namaSlot = slotData ? slotData.nama : currentSlot.toUpperCase();
+                const temaSlot = slotData ? slotData.tema : '';
+
+                if (getAudioSetting()) {
+                    playSoothingChime();
+                }
+
+                if (getNotifSetting() && 'Notification' in window && Notification.permission === 'granted') {
+                    try {
+                        new Notification(`Waktu ${namaSlot} Telah Tiba`, {
+                            body: `Protokol: ${temaSlot}`,
+                            icon: './icon-192.png',
+                            badge: './icon.svg'
+                        });
+                    } catch (e) {}
+                }
+
+                showToast(`Waktu ${namaSlot} Telah Masuk: ${temaSlot}`);
+                if (currentDayId === todayActual) {
+                    renderView();
+                }
+            }
+        }
+
+        // =========================================================================
+        // MODUL 5: EKSPOR & IMPOR DATA (JSON & LAPORAN MARKDOWN BULANAN)
+        // =========================================================================
+        window.exportDataJSON = function () {
+            const backupData = {
+                app: "Mizan Ayyam",
+                version: "2.0.0",
+                exportDate: new Date().toISOString(),
+                location: activeCoords,
+                checklists: {},
+                journals: {},
+                settings: {
+                    sound: getAudioSetting(),
+                    notification: getNotifSetting()
+                }
+            };
+
+            dataAyyam.forEach(day => {
+                backupData.journals[day.id] = localStorage.getItem(getJournalKey(day.id)) || '';
+                backupData.checklists[day.id] = {};
+                ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'].forEach(slot => {
+                    backupData.checklists[day.id][slot] = localStorage.getItem(getCheckKey(day.id, slot)) === 'true';
+                });
+            });
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const a = document.createElement('a');
+            const dateFormatted = new Date().toISOString().slice(0, 10);
+            a.setAttribute('href', dataStr);
+            a.setAttribute('download', `mizan-ayyam-backup-${dateFormatted}.json`);
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            showToast('Backup JSON berhasil diunduh!');
+        };
+
+        window.exportDataMarkdown = function () {
+            const dateNow = new Date();
+            const bulanNama = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][dateNow.getMonth()];
+            const tahun = dateNow.getFullYear();
+
+            let md = `# Laporan Evaluasi & Muhasabah Mizan Ayyam\n`;
+            md += `**Periode:** ${bulanNama} ${tahun} | **Diekspor:** ${dateNow.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n`;
+            md += `**Lokasi Referensi:** ${activeCoords.name} (${activeCoords.lat}, ${activeCoords.lng})\n\n`;
+            md += `---\n\n`;
+
+            dataAyyam.forEach((item) => {
+                const journal = localStorage.getItem(getJournalKey(item.id)) || '*(Belum ada catatan evaluasi)*';
+                let completedCount = 0;
+                const slotsDetail = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'].map(slot => {
+                    const checked = localStorage.getItem(getCheckKey(item.id, slot)) === 'true';
+                    if (checked) completedCount++;
+                    const slotName = item.waktu[slot].nama;
+                    return `- [${checked ? 'x' : ' '}] **${slotName}**: ${item.waktu[slot].tema}`;
+                }).join('\n');
+
+                md += `## ${item.nama} — ${item.arab}\n`;
+                md += `> **Fase Kosmis:** ${item.fase} (${item.ciptaan})\n`;
+                md += `> **Mindset Fokus:** ${item.fokus}\n\n`;
+                md += `### Protokol 5 Waktu (${completedCount}/5 Terpenuhi):\n`;
+                md += `${slotsDetail}\n\n`;
+                md += `### Catatan Muhasabah & Refleksi:\n`;
+                md += `${journal}\n\n`;
+                md += `---\n\n`;
+            });
+
+            md += `*Laporan ini dihasilkan secara otomatis oleh sistem Mizan Ayyam (Protokol Sirkadian & Kosmis).*`;
+
+            const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mizan-ayyam-muhasabah-${bulanNama.toLowerCase()}-${tahun}.md`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showToast('Laporan Markdown berhasil diunduh!');
+        };
+
+        window.importDataJSON = function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.checklists || !data.journals) {
+                        throw new Error("Struktur file backup tidak valid.");
+                    }
+
+                    Object.keys(data.checklists).forEach(dayId => {
+                        const daySlots = data.checklists[dayId];
+                        Object.keys(daySlots).forEach(slotKey => {
+                            localStorage.setItem(getCheckKey(dayId, slotKey), daySlots[slotKey]);
+                        });
+                    });
+
+                    Object.keys(data.journals).forEach(dayId => {
+                        localStorage.setItem(getJournalKey(dayId), data.journals[dayId]);
+                    });
+
+                    if (data.settings) {
+                        if (typeof data.settings.sound !== 'undefined') localStorage.setItem(AUDIO_KEY, data.settings.sound);
+                        if (typeof data.settings.notification !== 'undefined') localStorage.setItem(NOTIF_KEY, data.settings.notification);
+                        updateAudioUI();
+                        updateNotifUI();
+                    }
+
+                    renderView();
+                    showToast('Seluruh data Muhasabah & Checklist berhasil dipulihkan!');
+                } catch (err) {
+                    console.error('Gagal import:', err);
+                    showToast('Gagal memulihkan file: Format JSON tidak sesuai!', true);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        };
+
+        // Render Tombol Navigasi 7 Hari
+        function renderDayButtons() {
+            dayButtonsContainer.innerHTML = '';
+            dataAyyam.forEach(item => {
+                const isSelected = item.id === currentDayId;
+                const isToday = item.id === todayActual;
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    currentDayId = item.id;
+                    renderView();
+                    renderDayButtons();
+                };
+                btn.className = `p-3 rounded-xl border text-center transition-all duration-200 flex flex-col items-center justify-center gap-1 relative ${isSelected
+                        ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 font-semibold shadow-lg shadow-emerald-500/10'
+                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                    }`;
+
+                let todayIndicator = isToday
+                    ? `<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>`
+                    : '';
+
+                btn.innerHTML = `
+          ${todayIndicator}
+          <span class="text-xs uppercase tracking-wider">${item.nama.slice(0, 3)}</span>
+          <span class="text-xs font-medium hidden md:block">${item.nama}</span>
+        `;
+                dayButtonsContainer.appendChild(btn);
+            });
+        }
+
+        // Perbarui Progres Checklist
+        function updateProgress() {
+            const keys = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
+            let checkedCount = 0;
+            keys.forEach(k => {
+                if (localStorage.getItem(getCheckKey(currentDayId, k)) === 'true') {
+                    checkedCount++;
+                }
+            });
+            progressCounter.innerText = `${checkedCount} / 5 Terpenuhi`;
+        }
+
+        // Render 5 Kartu Waktu Harian
+        function renderWaktuCards(waktuObj) {
+            waktuCardsContainer.innerHTML = '';
+            const realSlotTimes = getComputedSlotTimes(prayerTimings);
+            const activeSlotKey = (currentDayId === todayActual) ? getCurrentActiveSlot(prayerTimings) : null;
+
+            const slots = [
+                { key: 'subuh', data: waktuObj.subuh, jamReal: realSlotTimes.subuh, icon: '🌅', color: 'border-amber-500/30' },
+                { key: 'dzuhur', data: waktuObj.dzuhur, jamReal: realSlotTimes.dzuhur, icon: '☀️', color: 'border-emerald-500/30' },
+                { key: 'ashar', data: waktuObj.ashar, jamReal: realSlotTimes.ashar, icon: '🌤️', color: 'border-cyan-500/30' },
+                { key: 'maghrib', data: waktuObj.maghrib, jamReal: realSlotTimes.maghrib, icon: '🌇', color: 'border-rose-500/30' },
+                { key: 'isya', data: waktuObj.isya, jamReal: realSlotTimes.isya, icon: '🌙', color: 'border-indigo-500/30' }
+            ];
+
+            slots.forEach(slot => {
+                const isChecked = localStorage.getItem(getCheckKey(currentDayId, slot.key)) === 'true';
+                const isActive = activeSlotKey === slot.key;
+
+                const card = document.createElement('div');
+
+                const activeStyle = isActive
+                    ? 'ring-2 ring-emerald-400 border-emerald-400 shadow-xl shadow-emerald-500/20 bg-emerald-950/20'
+                    : isChecked
+                        ? 'border-emerald-500/80 bg-emerald-950/20'
+                        : `${slot.color} bg-slate-900/80`;
+
+                card.className = `${activeStyle} border rounded-xl p-4 flex flex-col justify-between transition-all duration-300 hover:border-slate-600 space-y-4 shadow-sm relative overflow-hidden`;
+
+                const activeBadge = isActive ? `
+                    <span class="text-[9px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Aktif Sekarang
+                    </span>
+                ` : '';
+
+                card.innerHTML = `
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">${slot.icon}</span>
+                ${activeBadge}
+              </div>
+              <span class="text-[10px] font-mono tracking-tight text-emerald-400 bg-slate-800/90 px-2 py-0.5 rounded border border-slate-700/60 shadow-inner">${slot.jamReal}</span>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-slate-100">${slot.data.nama}</h4>
+              <div class="text-[11px] font-semibold text-emerald-400 mt-0.5">${slot.data.tema}</div>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed border-t border-slate-800/80 pt-2.5">${slot.data.tugas}</p>
+          </div>
+
+          <label class="flex items-center gap-2 pt-2.5 border-t border-slate-800/80 cursor-pointer select-none">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-800 border-slate-700 cursor-pointer" onchange="toggleSlot('${slot.key}', this.checked)">
+            <span class="text-xs ${isChecked ? 'text-emerald-400 font-semibold line-through' : 'text-slate-400'}">Terlaksana</span>
+          </label>
+        `;
+                waktuCardsContainer.appendChild(card);
+            });
+            updateProgress();
+        }
+
+        // Toggle Checklist
+        window.toggleSlot = function (slotKey, status) {
+            localStorage.setItem(getCheckKey(currentDayId, slotKey), status);
+            renderView();
+        };
+
+        // Render Tampilan Keseluruhan
+        function renderView() {
+            const data = dataAyyam.find(d => d.id === currentDayId);
+
+            liveBadge.innerHTML = currentDayId === todayActual
+                ? `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>Hari Ini: ${data.nama}`
+                : `<span class="w-2 h-2 rounded-full bg-cyan-400"></span>Tinjauan: ${data.nama}`;
+
+            document.getElementById('badgeFase').innerText = data.fase;
+            document.getElementById('judulHari').innerText = `${data.nama} — ${data.arab}`;
+            document.getElementById('subFase').innerText = `Entitas Utama: ${data.ciptaan}`;
+            document.getElementById('mindsetFokus').innerText = data.fokus;
+
+            document.getElementById('sumberDalil').innerText = data.sumber;
+            document.getElementById('teksArab').innerText = data.arabText;
+            document.getElementById('artiDalil').innerText = data.arti;
+            document.getElementById('filosofiKosmis').innerText = data.kosmis;
+
+            // Ambil jurnal catatan tersimpan
+            journalInput.value = localStorage.getItem(getJournalKey(currentDayId)) || '';
+
+            renderWaktuCards(data.waktu);
+        }
+
+        // Auto-save Catatan Refleksi dengan Debounce
+        let saveTimeout = null;
+        journalInput.addEventListener('input', (e) => {
+            journalStatus.innerText = 'Menyimpan...';
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem(getJournalKey(currentDayId), e.target.value);
+                journalStatus.innerText = 'Tersimpan otomatis';
+            }, 400);
+        });
+
+        // Inisialisasi Awal
+        renderDayButtons();
+        renderView();
+        initLocationAndSchedule();
+        updateAudioUI();
+        updateNotifUI();
+
+        // Interval Countdown Real-time (per detik) & refresh status aktif (per menit)
+        setInterval(updateCountdown, 1000);
+        setInterval(() => {
+            if (currentDayId === todayActual) {
+                const data = dataAyyam.find(d => d.id === currentDayId);
+                if (data) renderWaktuCards(data.waktu);
+            }
+        }, 60000);
+    </script>
+</body>
+
+</html>
